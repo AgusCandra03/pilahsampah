@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Latar belakang lingkaran hijau, senada dengan warna tema navbar (text-success) -->
+  <circle cx="16" cy="16" r="16" fill="#2e7d32"/>
+  <!-- Simbol daur ulang berwarna putih di tengah, merepresentasikan ikon bi-recycle pada navbar -->
+  <text x="16" y="23" font-size="20" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif">&#9851;</text>
+</svg>
