@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pilahsampah.id - Yuk Pilah Sampah dari Sekarang!</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" href="logo.svg" type="image/x-icon" />
+    <style>
+      :root {
+        --hijau-tua: #1b5e20;
+        --hijau: #2e7d32;
+        --hijau-muda: #66bb6a;
+        --hijau-pastel: #e8f5e9;
+        --biru: #1565c0;
+        --biru-muda: #e3f2fd;
+        --abu: #6c757d;
+      }
+
+      * {
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        background-color: #f6faf6;
+        color: #263238;
+      }
+
+      /* ===== NAVBAR ===== */
+      .navbar-brand span.eco-dot {
+        color: var(--hijau-muda);
+      }
+      .navbar {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      }
+
+      /* ===== HERO ===== */
+      .hero-section {
+        background: linear-gradient(
+          135deg,
+          var(--hijau-tua),
+          var(--hijau) 60%,
+          var(--hijau-muda)
+        );
+        color: white;
+        padding: 80px 0 100px 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-section::after {
+        content: "";
+        position: absolute;
+        bottom: -40px;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        background: #f6faf6;
+        border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      }
+      .hero-section h1 {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+      .btn-hero {
+        border-radius: 50px;
+        padding: 12px 30px;
+        font-weight: 600;
+      }
+
+      /* ===== SECTION UMUM ===== */
+      section {
+        scroll-margin-top: 90px;
+      }
+      .section-title {
+        font-weight: 700;
+        color: var(--hijau-tua);
+      }
+      .section-subtitle {
+        color: var(--abu);
+      }
+
+      /* ===== TOMBOL EDUKASI ===== */
+      .btn-edukasi {
+        border: none;
+        border-radius: 20px;
+        padding: 35px 20px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.4rem;
+        width: 100%;
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      }
+      .btn-edukasi i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 10px;
+      }
+      .btn-edukasi:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+        color: #fff;
+      }
+      .btn-organik {
+        background: linear-gradient(135deg, var(--hijau), var(--hijau-muda));
+      }
+      .btn-non-organik {
+        background: linear-gradient(135deg, #0d47a1, var(--biru));
+      }
+
+      /* Kartu penjelasan edukasi (muncul dinamis) */
+      #edukasiPanel {
+        display: none;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      #edukasiPanel.tampil {
+        display: block;
+        animation: fadeSlideIn 0.5s ease;
+      }
+      @keyframes fadeSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .edukasi-header-organik {
+        background: linear-gradient(135deg, var(--hijau), var(--hijau-muda));
+        color: #fff;
+      }
+      .edukasi-header-non-organik {
+        background: linear-gradient(135deg, #0d47a1, var(--biru));
+        color: #fff;
+      }
+
+      /* ===== DETEKSI SAMPAH ===== */
+      .card-deteksi {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      }
+      .toggle-mode .btn {
+        border-radius: 50px !important;
+        font-weight: 600;
+        padding: 8px 22px;
+      }
+      #videoWrapper,
+      #imgPreviewWrapper {
+        background: #eceff1;
+        border-radius: 16px;
+        min-height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 2px dashed #b0bec5;
+      }
+      #webcamContainer canvas,
+      #imgPreview {
+        border-radius: 16px;
+        max-width: 100%;
+      }
+      #uploadArea {
+        border: 2px dashed var(--hijau-muda);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      #uploadArea:hover {
+        background: var(--hijau-pastel);
+      }
+
+      .badge-hasil {
+        font-size: 1.1rem;
+        padding: 10px 18px;
+        border-radius: 50px;
+      }
+      .progress {
+        height: 22px;
+        border-radius: 50px;
+      }
+
+      #modelStatus {
+        font-size: 0.95rem;
+      }
+
+      .btn-aksi {
+        border-radius: 50px;
+        font-weight: 600;
+        padding: 10px 26px;
+      }
+
+      footer {
+        background: var(--hijau-tua);
+        color: #e0f2f1;
+      }
+      footer a {
+        color: #c8e6c9;
+      }
+
+      .spinner-border-sm-custom {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      @media (max-width: 576px) {
+        .hero-section {
+          padding: 60px 0 90px 0;
+        }
+        .btn-edukasi {
+          font-size: 1.15rem;
+          padding: 25px 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============================================================
+     NAVBAR
+============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+      <div class="container">
+        <a class="navbar-brand fw-bold text-success" href="#">
+          <i class="bi bi-recycle"></i> pilahsampah<span class="eco-dot"
+            >.id</span
+          >
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMenu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul class="navbar-nav ms-auto text-center">
+            <li class="nav-item">
+              <a class="nav-link" href="#beranda">Beranda</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#edukasi">Edukasi</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#deteksi">Deteksi Sampah</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#tentang">Tentang</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ============================================================
+     HERO SECTION
+============================================================ -->
+    <section id="beranda" class="hero-section text-center">
+      <div class="container">
+        <h1 class="display-5 mb-3">
+          Yuk, Mulai Pilah Sampah dari Sekarang! ♻️
+        </h1>
+        <p class="lead mb-4 col-lg-8 mx-auto">
+          pilahsampah.id membantu mengenali dan memilah sampah organik maupun
+          non-organik dengan bantuan kecerdasan buatan (AI). Cukup gunakan
+          kamera atau unggah foto, sistem akan langsung mendeteksinya untukmu!
+        </p>
+        <a href="#deteksi" class="btn btn-light btn-hero text-success">
+          <i class="bi bi-camera-fill me-1"></i> Mulai Deteksi Sampah
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================================
+     SECTION EDUKASI
+============================================================ -->
+    <section id="edukasi" class="py-5">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Edukasi Pilah Sampah</h2>
+          <p class="section-subtitle">
+            Klik salah satu tombol untuk mempelajari lebih lanjut
+          </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+          <div class="col-6 col-md-4">
+            <button
+              class="btn-edukasi btn-organik"
+              onclick="tampilkanEdukasi('organik')"
+            >
+              <i class="bi bi-flower2"></i>
+              Organik
+            </button>
+          </div>
+          <div class="col-6 col-md-4">
+            <button
+              class="btn-edukasi btn-non-organik"
+              onclick="tampilkanEdukasi('non-organik')"
+            >
+              <i class="bi bi-cup-straw"></i>
+              Non-Organik
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel penjelasan dinamis, isinya diganti lewat JS -->
+        <div class="row justify-content-center mt-4">
+          <div class="col-lg-9">
+            <div id="edukasiPanel" class="card">
+              <div id="edukasiHeader" class="card-header p-4">
+                <h3 id="edukasiJudul" class="mb-0 fw-bold"></h3>
+              </div>
+              <div class="card-body p-4">
+                <h5><i class="bi bi-journal-text me-2"></i>Pengertian</h5>
+                <p id="edukasiPengertian"></p>
+
+                <h5>
+                  <i class="bi bi-question-circle me-2"></i>Kenapa Harus
+                  Dipilah?
+                </h5>
+                <p id="edukasiAlasan"></p>
+
+                <h5>
+                  <i class="bi bi-exclamation-triangle me-2"></i>Akibat Jika
+                  Tidak Dipilah
+                </h5>
+                <p id="edukasiAkibat" class="mb-0"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+     SECTION DETEKSI SAMPAH
+============================================================ -->
+    <section id="deteksi" class="py-5 bg-white">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Deteksi Sampah dengan AI</h2>
+          <p class="section-subtitle">
+            Gunakan kamera atau unggah gambar untuk mengetahui jenis sampahmu
+          </p>
+          <!-- Status pemuatan model, sangat penting bagi siswa untuk tahu progresnya -->
+          <div id="modelStatus" class="alert alert-warning d-inline-block mt-2">
+            <span
+              class="spinner-border spinner-border-sm-custom text-warning me-2"
+              role="status"
+            ></span>
+            Memuat model AI, mohon tunggu sebentar...
+          </div>
+        </div>
+
+        <div class="row justify-content-center">
+          <div class="col-lg-9">
+            <div class="card card-deteksi p-4">
+              <!-- Toggle mode Kamera / Upload -->
+              <div class="d-flex justify-content-center toggle-mode mb-4">
+                <div class="btn-group" role="group">
+                  <button
+                    type="button"
+                    id="btnModeKamera"
+                    class="btn btn-success"
+                    onclick="gantiMode('kamera')"
+                  >
+                    <i class="bi bi-camera-video-fill me-1"></i> Kamera
+                  </button>
+                  <button
+                    type="button"
+                    id="btnModeUpload"
+                    class="btn btn-outline-success"
+                    onclick="gantiMode('upload')"
+                  >
+                    <i class="bi bi-upload me-1"></i> Upload Gambar
+                  </button>
+                </div>
+              </div>
+
+              <div class="row g-4">
+                <!-- Kolom kiri: input (kamera / upload) -->
+                <div class="col-md-6">
+                  <!-- Mode Kamera -->
+                  <div id="modeKameraArea">
+                    <div id="videoWrapper">
+                      <div id="webcamContainer"></div>
+                    </div>
+                    <div class="text-center mt-3">
+                      <button
+                        id="btnStartCamera"
+                        class="btn btn-success btn-aksi"
+                        onclick="mulaiKamera()"
+                      >
+                        <i class="bi bi-camera-fill me-1"></i> Aktifkan Kamera
+                      </button>
+                      <button
+                        id="btnStopCamera"
+                        class="btn btn-outline-danger btn-aksi d-none"
+                        onclick="hentikanKamera()"
+                      >
+                        <i class="bi bi-stop-fill me-1"></i> Matikan Kamera
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Mode Upload -->
+                  <div id="modeUploadArea" class="d-none">
+                    <div id="imgPreviewWrapper">
+                      <img
+                        id="imgPreview"
+                        src=""
+                        alt="Preview gambar sampah"
+                        class="d-none"
+                      />
+                      <div
+                        id="uploadArea"
+                        onclick="document.getElementById('inputFile').click()"
+                      >
+                        <i
+                          class="bi bi-cloud-arrow-up-fill fs-1 text-success"
+                        ></i>
+                        <p class="mb-0 mt-2">
+                          Klik di sini untuk memilih gambar sampah
+                        </p>
+                        <small class="text-muted">Format JPG / PNG</small>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      id="inputFile"
+                      accept="image/*"
+                      class="d-none"
+                      onchange="gambarDiunggah(event)"
+                    />
+                    <div class="text-center mt-3">
+                      <button
+                        id="btnPrediksiUpload"
+                        class="btn btn-success btn-aksi"
+                        disabled
+                        onclick="prediksiGambarUpload()"
+                      >
+                        <i class="bi bi-search me-1"></i> Prediksi Gambar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Kolom kanan: hasil klasifikasi -->
+                <div class="col-md-6">
+                  <h5 class="mb-3">
+                    <i class="bi bi-bar-chart-fill me-2"></i>Hasil Klasifikasi
+                  </h5>
+                  <div id="hasilKosong" class="text-muted">
+                    Belum ada hasil. Aktifkan kamera atau unggah gambar terlebih
+                    dahulu.
+                  </div>
+                  <div id="hasilList" class="d-none"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+     SECTION TENTANG
+============================================================ -->
+    <section id="tentang" class="py-5">
+      <div class="container text-center">
+        <h2 class="section-title mb-3">Tentang pilahsampah.id</h2>
+        <p class="col-lg-8 mx-auto section-subtitle">
+          pilahsampah.id adalah platform edukasi berbasis website yang dirancang
+          untuk membantu memahami pentingnya memilah sampah organik dan
+          non-organik. Dengan bantuan teknologi Machine Learning (Teachable
+          Machine), proses identifikasi jenis sampah menjadi lebih mudah, cepat,
+          dan menyenangkan.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+     FOOTER
+============================================================ -->
+    <footer class="py-4 text-center">
+      <div class="container">
+        <p class="mb-1">
+          <i class="bi bi-recycle"></i> <strong>pilahsampah.id</strong>
+        </p>
+        <small
+          >&copy; 2026 pilahsampah.id — Dibuat untuk edukasi dan peduli
+          lingkungan</small
+        >
+      </div>
+    </footer>
+
+    <!-- ============================================================
+     LIBRARY JAVASCRIPT
+============================================================ -->
+    <!-- Bootstrap Bundle (termasuk Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- TensorFlow.js dan Teachable Machine Image Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+    <script>
+      /* ================================================================
+   BAGIAN 1: DATA KONTEN EDUKASI
+   -> Disimpan dalam object agar mudah diubah/ditambah oleh siswa
+================================================================ */
+      const dataEdukasi = {
+        organik: {
+          judul: "Sampah Organik",
+          headerClass: "edukasi-header-organik",
+          pengertian:
+            "Sampah organik adalah sampah yang berasal dari sisa makhluk hidup (tumbuhan atau hewan) dan dapat terurai secara alami (biodegradable). Contohnya: sisa makanan, daun kering, kulit buah, dan sisa sayuran.",
+          alasan:
+            "Sampah organik perlu dipilah agar dapat diolah menjadi kompos atau pupuk alami, serta agar tidak tercampur dengan sampah non-organik yang justru dapat menghambat proses penguraiannya.",
+          akibat:
+            "Jika tidak dipilah, sampah organik yang tercampur dengan sampah lain akan lebih sulit terurai, menimbulkan bau tidak sedap, mengundang lalat dan bakteri penyakit, serta mempercepat penuhnya lahan Tempat Pembuangan Akhir (TPA).",
+        },
+        "non-organik": {
+          judul: "Sampah Non-Organik",
+          headerClass: "edukasi-header-non-organik",
+          pengertian:
+            "Sampah non-organik adalah sampah yang berasal dari bahan yang sulit atau tidak dapat terurai secara alami, seperti plastik, kaca, logam, dan kertas laminasi.",
+          alasan:
+            "Sampah non-organik perlu dipilah agar bahan yang masih bisa didaur ulang (seperti plastik dan logam) dapat diproses kembali menjadi barang baru, sehingga mengurangi eksploitasi sumber daya alam.",
+          akibat:
+            "Jika tidak dipilah, sampah non-organik dapat mencemari tanah dan air karena butuh waktu puluhan hingga ratusan tahun untuk terurai, serta berpotensi mencemari lingkungan dan membahayakan ekosistem jika dibakar sembarangan.",
+        },
+      };
+
+      /**
+       * Menampilkan panel edukasi sesuai jenis sampah yang dipilih (organik/non-organik).
+       * Fungsi ini dipanggil saat tombol "Organik" atau "Non-Organik" diklik.
+       */
+      function tampilkanEdukasi(jenis) {
+        const data = dataEdukasi[jenis];
+        const panel = document.getElementById("edukasiPanel");
+        const header = document.getElementById("edukasiHeader");
+
+        document.getElementById("edukasiJudul").innerText = data.judul;
+        document.getElementById("edukasiPengertian").innerText =
+          data.pengertian;
+        document.getElementById("edukasiAlasan").innerText = data.alasan;
+        document.getElementById("edukasiAkibat").innerText = data.akibat;
+
+        // Ganti warna header sesuai jenis sampah
+        header.className = "card-header p-4 " + data.headerClass;
+
+        // Tampilkan panel dengan animasi
+        panel.classList.add("tampil");
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      /* ================================================================
+   BAGIAN 2: KONFIGURASI MODEL TEACHABLE MACHINE
+================================================================ */
+      const URL_MODEL =
+        "https://teachablemachine.withgoogle.com/models/pB19NDibU/";
+      const MODEL_JSON = URL_MODEL + "model.json";
+      const MODEL_METADATA = URL_MODEL + "metadata.json";
+
+      let model; // menyimpan model yang sudah dimuat
+      let webcam; // objek webcam dari Teachable Machine
+      let modelSiap = false; // status apakah model sudah siap dipakai
+      let loopKameraAktif = false; // menandai apakah loop prediksi kamera sedang berjalan
+
+      /**
+       * Memuat model Teachable Machine saat halaman pertama kali dibuka.
+       * Ditampilkan status "Memuat model AI..." selama proses berlangsung.
+       */
+      async function muatModel() {
+        try {
+          model = await tmImage.load(MODEL_JSON, MODEL_METADATA);
+          modelSiap = true;
+
+          const statusBox = document.getElementById("modelStatus");
+          statusBox.className = "alert alert-success d-inline-block mt-2";
+          statusBox.innerHTML =
+            '<i class="bi bi-check-circle-fill me-1"></i> Model AI siap digunakan!';
+
+          // Sembunyikan status setelah beberapa detik agar tampilan lebih rapi
+          setTimeout(() => {
+            statusBox.style.display = "none";
+          }, 2500);
+        } catch (error) {
+          const statusBox = document.getElementById("modelStatus");
+          statusBox.className = "alert alert-danger d-inline-block mt-2";
+          statusBox.innerHTML =
+            '<i class="bi bi-x-circle-fill me-1"></i> Gagal memuat model AI. Periksa koneksi internet.';
+          console.error("Gagal memuat model:", error);
+        }
+      }
+
+      // Panggil fungsi pemuatan model segera saat script dijalankan
+      muatModel();
+
+      /* ================================================================
+   BAGIAN 3: MODE KAMERA VS UPLOAD (TOGGLE)
+================================================================ */
+      function gantiMode(mode) {
+        const btnKamera = document.getElementById("btnModeKamera");
+        const btnUpload = document.getElementById("btnModeUpload");
+        const areaKamera = document.getElementById("modeKameraArea");
+        const areaUpload = document.getElementById("modeUploadArea");
+
+        if (mode === "kamera") {
+          areaKamera.classList.remove("d-none");
+          areaUpload.classList.add("d-none");
+          btnKamera.classList.replace("btn-outline-success", "btn-success");
+          btnUpload.classList.replace("btn-success", "btn-outline-success");
+
+          // Hentikan kamera otomatis jika sebelumnya berjalan lalu pindah balik
+        } else {
+          areaUpload.classList.remove("d-none");
+          areaKamera.classList.add("d-none");
+          btnUpload.classList.replace("btn-outline-success", "btn-success");
+          btnKamera.classList.replace("btn-success", "btn-outline-success");
+
+          // Matikan kamera saat berpindah ke mode upload agar tidak boros resource
+          hentikanKamera();
+        }
+      }
+
+      /* ================================================================
+   BAGIAN 4: MODE KAMERA (WEBCAM REAL-TIME)
+================================================================ */
+
+      /**
+       * Mengaktifkan webcam dan memulai loop prediksi secara real-time.
+       */
+      async function mulaiKamera() {
+        if (!modelSiap) {
+          alert("Model AI belum siap, mohon tunggu beberapa saat lagi.");
+          return;
+        }
+
+        const flip = true; // mirror kamera agar seperti cermin
+        webcam = new tmImage.Webcam(300, 300, flip);
+        await webcam.setup(); // meminta izin akses kamera ke pengguna
+        await webcam.play();
+
+        // Masukkan elemen canvas webcam ke dalam container
+        document.getElementById("webcamContainer").innerHTML = "";
+        document.getElementById("webcamContainer").appendChild(webcam.canvas);
+
+        document.getElementById("btnStartCamera").classList.add("d-none");
+        document.getElementById("btnStopCamera").classList.remove("d-none");
+
+        loopKameraAktif = true;
+        window.requestAnimationFrame(loopPrediksiKamera);
+      }
+
+      /**
+       * Loop yang berjalan terus-menerus selama kamera aktif,
+       * memperbarui frame webcam dan menjalankan prediksi setiap frame.
+       */
+      async function loopPrediksiKamera() {
+        if (!loopKameraAktif) return;
+        webcam.update(); // ambil frame terbaru dari kamera
+        await prediksi(webcam.canvas);
+        window.requestAnimationFrame(loopPrediksiKamera);
+      }
+
+      /**
+       * Menghentikan kamera dan loop prediksi.
+       */
+      function hentikanKamera() {
+        loopKameraAktif = false;
+        if (webcam) {
+          webcam.stop();
+        }
+        document.getElementById("webcamContainer").innerHTML = "";
+        document.getElementById("btnStartCamera").classList.remove("d-none");
+        document.getElementById("btnStopCamera").classList.add("d-none");
+      }
+
+      /* ================================================================
+   BAGIAN 5: MODE UPLOAD GAMBAR
+================================================================ */
+
+      /**
+       * Dipanggil saat pengguna memilih file gambar dari perangkatnya.
+       * Menampilkan preview gambar sebelum diprediksi.
+       */
+      function gambarDiunggah(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const imgPreview = document.getElementById("imgPreview");
+          imgPreview.src = e.target.result;
+          imgPreview.classList.remove("d-none");
+          document.getElementById("uploadArea").classList.add("d-none");
+          document.getElementById("btnPrediksiUpload").disabled = false;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      /**
+       * Menjalankan prediksi terhadap gambar yang sudah diunggah,
+       * dipanggil saat tombol "Prediksi Gambar" ditekan.
+       */
+      async function prediksiGambarUpload() {
+        if (!modelSiap) {
+          alert("Model AI belum siap, mohon tunggu beberapa saat lagi.");
+          return;
+        }
+        const imgPreview = document.getElementById("imgPreview");
+        await prediksi(imgPreview);
+      }
+
+      /* ================================================================
+   BAGIAN 6: FUNGSI PREDIKSI & TAMPILKAN HASIL
+================================================================ */
+
+      /**
+       * Fungsi inti yang mengirim gambar/canvas ke model Teachable Machine
+       * lalu menampilkan hasil klasifikasi (label + confidence score).
+       * @param {HTMLImageElement|HTMLCanvasElement} sumberGambar
+       */
+      async function prediksi(sumberGambar) {
+        const hasil = await model.predict(sumberGambar);
+
+        // Urutkan hasil dari confidence tertinggi ke terendah
+        hasil.sort((a, b) => b.probability - a.probability);
+
+        tampilkanHasil(hasil);
+      }
+
+      /**
+       * Menampilkan hasil prediksi ke dalam UI berupa progress bar
+       * dan badge warna sesuai label sampah (organik = hijau, non-organik = biru).
+       */
+      function tampilkanHasil(hasil) {
+        document.getElementById("hasilKosong").classList.add("d-none");
+        const hasilList = document.getElementById("hasilList");
+        hasilList.classList.remove("d-none");
+        hasilList.innerHTML = "";
+
+        hasil.forEach((item) => {
+          const persen = (item.probability * 100).toFixed(1);
+          const namaLabel = item.className.toLowerCase();
+
+          // Tentukan warna berdasarkan nama label (disesuaikan dengan label pada model)
+          let warnaBar = "bg-success";
+          let warnaBadge = "bg-success";
+          if (namaLabel.includes("non")) {
+            warnaBar = "bg-primary";
+            warnaBadge = "bg-primary";
+          }
+
+          const itemHtml = `
+      <div class="mb-3">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="fw-semibold text-capitalize">${item.className}</span>
+          <span class="badge ${warnaBadge} badge-hasil">${persen}%</span>
+        </div>
+        <div class="progress">
+          <div class="progress-bar ${warnaBar}" role="progressbar" style="width: ${persen}%">
+          </div>
+        </div>
+      </div>
+    `;
+          hasilList.innerHTML += itemHtml;
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -216,6 +216,13 @@
         padding: 10px 26px;
       }
 
+      /* Pilihan kamera depan / belakang */
+      .pilih-kamera .btn {
+        border-radius: 50px !important;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
       footer {
         background: var(--hijau-tua);
         color: #e0f2f1;
@@ -409,6 +416,28 @@
                 <div class="col-md-6">
                   <!-- Mode Kamera -->
                   <div id="modeKameraArea">
+                    <!-- PILIHAN KAMERA DEPAN / BELAKANG -->
+                    <div class="d-flex justify-content-center pilih-kamera mb-3">
+                      <div class="btn-group" role="group" aria-label="Pilih kamera">
+                        <button
+                          type="button"
+                          id="btnKameraDepan"
+                          class="btn btn-outline-success"
+                          onclick="pilihKamera('user')"
+                        >
+                          <i class="bi bi-person-video me-1"></i> Kamera Depan
+                        </button>
+                        <button
+                          type="button"
+                          id="btnKameraBelakang"
+                          class="btn btn-success"
+                          onclick="pilihKamera('environment')"
+                        >
+                          <i class="bi bi-camera me-1"></i> Kamera Belakang
+                        </button>
+                      </div>
+                    </div>
+
                     <div id="videoWrapper">
                       <div id="webcamContainer"></div>
                     </div>
@@ -428,6 +457,10 @@
                         <i class="bi bi-stop-fill me-1"></i> Matikan Kamera
                       </button>
                     </div>
+                    <div
+                      id="kameraError"
+                      class="alert alert-danger mt-3 d-none mb-0"
+                    ></div>
                   </div>
 
                   <!-- Mode Upload -->
@@ -534,7 +567,6 @@
     <script>
       /* ================================================================
    BAGIAN 1: DATA KONTEN EDUKASI
-   -> Disimpan dalam object agar mudah diubah/ditambah oleh siswa
 ================================================================ */
       const dataEdukasi = {
         organik: {
@@ -559,10 +591,6 @@
         },
       };
 
-      /**
-       * Menampilkan panel edukasi sesuai jenis sampah yang dipilih (organik/non-organik).
-       * Fungsi ini dipanggil saat tombol "Organik" atau "Non-Organik" diklik.
-       */
       function tampilkanEdukasi(jenis) {
         const data = dataEdukasi[jenis];
         const panel = document.getElementById("edukasiPanel");
@@ -574,10 +602,8 @@
         document.getElementById("edukasiAlasan").innerText = data.alasan;
         document.getElementById("edukasiAkibat").innerText = data.akibat;
 
-        // Ganti warna header sesuai jenis sampah
         header.className = "card-header p-4 " + data.headerClass;
 
-        // Tampilkan panel dengan animasi
         panel.classList.add("tampil");
         panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -594,11 +620,9 @@
       let webcam; // objek webcam dari Teachable Machine
       let modelSiap = false; // status apakah model sudah siap dipakai
       let loopKameraAktif = false; // menandai apakah loop prediksi kamera sedang berjalan
+      let kameraAktif = false; // menandai apakah kamera sedang menyala
+      let facingMode = "environment"; // "user" = kamera depan, "environment" = kamera belakang
 
-      /**
-       * Memuat model Teachable Machine saat halaman pertama kali dibuka.
-       * Ditampilkan status "Memuat model AI..." selama proses berlangsung.
-       */
       async function muatModel() {
         try {
           model = await tmImage.load(MODEL_JSON, MODEL_METADATA);
@@ -609,7 +633,6 @@
           statusBox.innerHTML =
             '<i class="bi bi-check-circle-fill me-1"></i> Model AI siap digunakan!';
 
-          // Sembunyikan status setelah beberapa detik agar tampilan lebih rapi
           setTimeout(() => {
             statusBox.style.display = "none";
           }, 2500);
@@ -622,7 +645,6 @@
         }
       }
 
-      // Panggil fungsi pemuatan model segera saat script dijalankan
       muatModel();
 
       /* ================================================================
@@ -639,80 +661,155 @@
           areaUpload.classList.add("d-none");
           btnKamera.classList.replace("btn-outline-success", "btn-success");
           btnUpload.classList.replace("btn-success", "btn-outline-success");
-
-          // Hentikan kamera otomatis jika sebelumnya berjalan lalu pindah balik
         } else {
           areaUpload.classList.remove("d-none");
           areaKamera.classList.add("d-none");
           btnUpload.classList.replace("btn-outline-success", "btn-success");
           btnKamera.classList.replace("btn-success", "btn-outline-success");
 
-          // Matikan kamera saat berpindah ke mode upload agar tidak boros resource
           hentikanKamera();
         }
       }
 
       /* ================================================================
-   BAGIAN 4: MODE KAMERA (WEBCAM REAL-TIME)
+   BAGIAN 4: MODE KAMERA (WEBCAM REAL-TIME) + PILIH DEPAN/BELAKANG
 ================================================================ */
 
+      /** Menampilkan / menyembunyikan pesan error kamera */
+      function tampilkanErrorKamera(pesan) {
+        const box = document.getElementById("kameraError");
+        if (!pesan) {
+          box.classList.add("d-none");
+          box.innerText = "";
+          return;
+        }
+        box.innerText = pesan;
+        box.classList.remove("d-none");
+      }
+
+      /** Memperbarui tampilan tombol pilihan kamera (aktif = hijau penuh) */
+      function perbaruiTombolKamera() {
+        const btnDepan = document.getElementById("btnKameraDepan");
+        const btnBelakang = document.getElementById("btnKameraBelakang");
+
+        if (facingMode === "user") {
+          btnDepan.className = "btn btn-success";
+          btnBelakang.className = "btn btn-outline-success";
+        } else {
+          btnBelakang.className = "btn btn-success";
+          btnDepan.className = "btn btn-outline-success";
+        }
+      }
+
       /**
-       * Mengaktifkan webcam dan memulai loop prediksi secara real-time.
+       * Dipanggil saat user memilih kamera depan ('user') atau belakang ('environment').
+       * Jika kamera sedang menyala, kamera otomatis dimulai ulang dengan kamera yang baru.
+       */
+      async function pilihKamera(mode) {
+        if (mode === facingMode && !kameraAktif) {
+          perbaruiTombolKamera();
+          return;
+        }
+        facingMode = mode;
+        perbaruiTombolKamera();
+
+        if (kameraAktif) {
+          await hentikanKamera();
+          await mulaiKamera();
+        }
+      }
+
+      /**
+       * Mengaktifkan webcam sesuai pilihan kamera lalu memulai loop prediksi.
        */
       async function mulaiKamera() {
         if (!modelSiap) {
           alert("Model AI belum siap, mohon tunggu beberapa saat lagi.");
           return;
         }
+        if (kameraAktif) return; // cegah kamera dibuka dua kali
 
-        const flip = true; // mirror kamera agar seperti cermin
-        webcam = new tmImage.Webcam(300, 300, flip);
-        await webcam.setup(); // meminta izin akses kamera ke pengguna
-        await webcam.play();
+        tampilkanErrorKamera("");
 
-        // Masukkan elemen canvas webcam ke dalam container
-        document.getElementById("webcamContainer").innerHTML = "";
-        document.getElementById("webcamContainer").appendChild(webcam.canvas);
+        try {
+          // Kamera depan di-mirror (seperti cermin), kamera belakang tidak
+          const flip = facingMode === "user";
+          webcam = new tmImage.Webcam(300, 300, flip);
 
-        document.getElementById("btnStartCamera").classList.add("d-none");
-        document.getElementById("btnStopCamera").classList.remove("d-none");
+          // Opsi facingMode menentukan kamera mana yang dipakai
+          await webcam.setup({ facingMode: facingMode });
+          await webcam.play();
 
-        loopKameraAktif = true;
-        window.requestAnimationFrame(loopPrediksiKamera);
+          document.getElementById("webcamContainer").innerHTML = "";
+          document.getElementById("webcamContainer").appendChild(webcam.canvas);
+
+          document.getElementById("btnStartCamera").classList.add("d-none");
+          document.getElementById("btnStopCamera").classList.remove("d-none");
+
+          kameraAktif = true;
+          loopKameraAktif = true;
+          window.requestAnimationFrame(loopPrediksiKamera);
+        } catch (error) {
+          console.error("Gagal mengaktifkan kamera:", error);
+          kameraAktif = false;
+          loopKameraAktif = false;
+
+          let pesan = "Kamera tidak dapat diaktifkan.";
+          if (error && error.name === "NotAllowedError") {
+            pesan =
+              "Izin kamera ditolak. Izinkan akses kamera pada browser lalu coba lagi.";
+          } else if (
+            error &&
+            (error.name === "NotFoundError" ||
+              error.name === "OverconstrainedError")
+          ) {
+            pesan =
+              "Kamera yang dipilih tidak ditemukan di perangkat ini. Coba pilih kamera lain.";
+          } else if (error && error.name === "NotReadableError") {
+            pesan =
+              "Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.";
+          } else if (!window.isSecureContext) {
+            pesan =
+              "Kamera hanya bisa digunakan lewat HTTPS atau localhost.";
+          }
+          tampilkanErrorKamera(pesan);
+        }
       }
 
-      /**
-       * Loop yang berjalan terus-menerus selama kamera aktif,
-       * memperbarui frame webcam dan menjalankan prediksi setiap frame.
-       */
       async function loopPrediksiKamera() {
         if (!loopKameraAktif) return;
-        webcam.update(); // ambil frame terbaru dari kamera
+        webcam.update();
         await prediksi(webcam.canvas);
-        window.requestAnimationFrame(loopPrediksiKamera);
+        if (loopKameraAktif) {
+          window.requestAnimationFrame(loopPrediksiKamera);
+        }
       }
 
       /**
        * Menghentikan kamera dan loop prediksi.
        */
-      function hentikanKamera() {
+      async function hentikanKamera() {
         loopKameraAktif = false;
+        kameraAktif = false;
         if (webcam) {
-          webcam.stop();
+          try {
+            await webcam.stop();
+          } catch (e) {
+            console.error(e);
+          }
+          webcam = null;
         }
         document.getElementById("webcamContainer").innerHTML = "";
         document.getElementById("btnStartCamera").classList.remove("d-none");
         document.getElementById("btnStopCamera").classList.add("d-none");
       }
 
+      // Tampilan awal tombol pilihan kamera (default: kamera belakang)
+      perbaruiTombolKamera();
+
       /* ================================================================
    BAGIAN 5: MODE UPLOAD GAMBAR
 ================================================================ */
-
-      /**
-       * Dipanggil saat pengguna memilih file gambar dari perangkatnya.
-       * Menampilkan preview gambar sebelum diprediksi.
-       */
       function gambarDiunggah(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -728,10 +825,6 @@
         reader.readAsDataURL(file);
       }
 
-      /**
-       * Menjalankan prediksi terhadap gambar yang sudah diunggah,
-       * dipanggil saat tombol "Prediksi Gambar" ditekan.
-       */
       async function prediksiGambarUpload() {
         if (!modelSiap) {
           alert("Model AI belum siap, mohon tunggu beberapa saat lagi.");
@@ -744,25 +837,12 @@
       /* ================================================================
    BAGIAN 6: FUNGSI PREDIKSI & TAMPILKAN HASIL
 ================================================================ */
-
-      /**
-       * Fungsi inti yang mengirim gambar/canvas ke model Teachable Machine
-       * lalu menampilkan hasil klasifikasi (label + confidence score).
-       * @param {HTMLImageElement|HTMLCanvasElement} sumberGambar
-       */
       async function prediksi(sumberGambar) {
         const hasil = await model.predict(sumberGambar);
-
-        // Urutkan hasil dari confidence tertinggi ke terendah
         hasil.sort((a, b) => b.probability - a.probability);
-
         tampilkanHasil(hasil);
       }
 
-      /**
-       * Menampilkan hasil prediksi ke dalam UI berupa progress bar
-       * dan badge warna sesuai label sampah (organik = hijau, non-organik = biru).
-       */
       function tampilkanHasil(hasil) {
         document.getElementById("hasilKosong").classList.add("d-none");
         const hasilList = document.getElementById("hasilList");
@@ -773,7 +853,6 @@
           const persen = (item.probability * 100).toFixed(1);
           const namaLabel = item.className.toLowerCase();
 
-          // Tentukan warna berdasarkan nama label (disesuaikan dengan label pada model)
           let warnaBar = "bg-success";
           let warnaBadge = "bg-success";
           if (namaLabel.includes("non")) {
